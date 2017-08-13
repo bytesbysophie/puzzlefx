@@ -1,7 +1,7 @@
-package luxmeter.puzzlefx;
+package luxmeter.puzzlefx.ui;
 
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -11,13 +11,18 @@ import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import luxmeter.puzzlefx.model.AppConstants;
+import luxmeter.puzzlefx.model.Piece;
 
 public class Controller implements Initializable {
     // Drawing Surface (Canvas)
     private GraphicsContext graphicsContext;
     private Canvas canvas;
+    private List<Piece> piecesInNormalOrder;
+    private List<Piece> shuffledPieces;
 
     @FXML
     private StackPane rootPane;
@@ -35,29 +40,47 @@ public class Controller implements Initializable {
         fillBackgroundWithColor(Color.BLACK);
         Image originalImage = getResizedImage();
 
+        piecesInNormalOrder = Piece.createPieces(originalImage,
+                AppConstants.NUM_HORIZONTAL_SLICES,
+                AppConstants.NUM_VERTICAL_SLICES);
+        shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
+        drawShuffledPieces();
 
-
-        List<Piece> pieces = new ArrayList();
-        for (int h = 0; h < AppConstants.NUM_HORIZONTAL_SLICES; h++) {
-            int srcX = (int) ((originalImage.getWidth() / AppConstants.NUM_HORIZONTAL_SLICES) * h);
-            int width = (int) (originalImage.getWidth() / AppConstants.NUM_HORIZONTAL_SLICES);
-
-            for (int v = 0; v < AppConstants.NUM_VERTICAL_SLICES; v++) {
-                int srcY = (int) ((originalImage.getHeight() / AppConstants.NUM_VERTICAL_SLICES) * v);
-                int height = (int) (originalImage.getHeight() / AppConstants.NUM_VERTICAL_SLICES);
-                pieces.add(new Piece(originalImage, srcX, srcY, width, height));
-            }
-        }
-
-        for (Piece piece : pieces) {
-            graphicsContext.getPixelWriter().setPixels(
-                    piece.getSrcX(), piece.getSrcY(),
-                    piece.getWidth(), piece.getHeight(),
-                    originalImage.getPixelReader(),
-                    piece.getSrcX(), piece.getSrcY());
-        }
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, new SwapHandler(this));
 
         addCanvasToRootPane(originalImage);
+    }
+
+    public List<Piece> getPiecesInNormalOrder() {
+        return piecesInNormalOrder;
+    }
+
+    public List<Piece> getShuffledPieces() {
+        return shuffledPieces;
+    }
+
+    public void drawShuffledPieces() {
+        if (shuffledPieces.isEmpty()) {
+            return;
+        }
+
+        Image originalImage = shuffledPieces.get(0).getOriginalImage();
+        Iterator<Piece> iterator = shuffledPieces.iterator();
+        for (int h = 0; h < AppConstants.NUM_HORIZONTAL_SLICES; h++) {
+            int originalXPos = (int) ((originalImage.getWidth() / AppConstants.NUM_HORIZONTAL_SLICES) * h);
+
+            for (int v = 0; v < AppConstants.NUM_VERTICAL_SLICES; v++) {
+                int originalYPos = (int) ((originalImage.getHeight() / AppConstants.NUM_VERTICAL_SLICES) * v);
+                Piece piece = iterator.hasNext() ? iterator.next() : null;
+                if (piece != null) {
+                    graphicsContext.getPixelWriter().setPixels(
+                            originalXPos, originalYPos,
+                            piece.getWidth(), piece.getHeight(),
+                            piece.getOriginalImage().getPixelReader(),
+                            piece.getXPos(), piece.getYPos());
+                }
+            }
+        }
     }
 
     private Image getResizedImage() {
@@ -82,4 +105,5 @@ public class Controller implements Initializable {
         graphicsContext.setFill(color);
         graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
+
 }

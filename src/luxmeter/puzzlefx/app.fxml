@@ -8,4 +8,4 @@
 <StackPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2"
            id="StackPane" fx:id="rootPane"
            maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
-           fx:controller="luxmeter.puzzlefx.Controller" />
+           fx:controller="luxmeter.puzzlefx.ui.Controller" />
