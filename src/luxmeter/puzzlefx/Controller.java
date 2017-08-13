@@ -1,6 +1,8 @@
 package luxmeter.puzzlefx;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.fxml.FXML;
@@ -33,17 +35,27 @@ public class Controller implements Initializable {
         fillBackgroundWithColor(Color.BLACK);
         Image originalImage = getResizedImage();
 
-        int targetX = 0;
-        int targetY = 0;
-        int width = (int) originalImage.getWidth();
-        int height = (int) originalImage.getHeight();
-        int srcX = 0;
-        int srcY = 0;
-        graphicsContext.getPixelWriter().setPixels(
-                targetX, targetY,
-                width, height,
-                originalImage.getPixelReader(),
-                srcX, srcY);
+
+
+        List<Piece> pieces = new ArrayList();
+        for (int h = 0; h < AppConstants.NUM_HORIZONTAL_SLICES; h++) {
+            int srcX = (int) ((originalImage.getWidth() / AppConstants.NUM_HORIZONTAL_SLICES) * h);
+            int width = (int) (originalImage.getWidth() / AppConstants.NUM_HORIZONTAL_SLICES);
+
+            for (int v = 0; v < AppConstants.NUM_VERTICAL_SLICES; v++) {
+                int srcY = (int) ((originalImage.getHeight() / AppConstants.NUM_VERTICAL_SLICES) * v);
+                int height = (int) (originalImage.getHeight() / AppConstants.NUM_VERTICAL_SLICES);
+                pieces.add(new Piece(originalImage, srcX, srcY, width, height));
+            }
+        }
+
+        for (Piece piece : pieces) {
+            graphicsContext.getPixelWriter().setPixels(
+                    piece.getSrcX(), piece.getSrcY(),
+                    piece.getWidth(), piece.getHeight(),
+                    originalImage.getPixelReader(),
+                    piece.getSrcX(), piece.getSrcY());
+        }
 
         addCanvasToRootPane(originalImage);
     }
