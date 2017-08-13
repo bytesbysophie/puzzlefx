@@ -31,10 +31,21 @@ public class Controller implements Initializable {
         graphicsContext = canvas.getGraphicsContext2D();
 
         fillBackgroundWithColor(Color.BLACK);
-        Image image = getResizedImage();
-        graphicsContext.drawImage(image, 0, 0);
+        Image originalImage = getResizedImage();
 
-        addCanvasToRootPane(image);
+        int targetX = 0;
+        int targetY = 0;
+        int width = (int) originalImage.getWidth();
+        int height = (int) originalImage.getHeight();
+        int srcX = 0;
+        int srcY = 0;
+        graphicsContext.getPixelWriter().setPixels(
+                targetX, targetY,
+                width, height,
+                originalImage.getPixelReader(),
+                srcX, srcY);
+
+        addCanvasToRootPane(originalImage);
     }
 
     private Image getResizedImage() {
