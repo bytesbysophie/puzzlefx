@@ -16,9 +16,9 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        Parent root = FXMLLoader.load(getClass().getResource("app.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/app.fxml"));
         Scene scene = new Scene(root);
-        scene.getStylesheets().add("app.css");
+        scene.getStylesheets().add("/app.css");
         stage.setScene(scene);
         stage.setTitle(AppConstants.WINDOW_TITLE);
         stage.setResizable(false);
