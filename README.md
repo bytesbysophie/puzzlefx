@@ -12,3 +12,6 @@ mvn install
 java -jar target/puzzlefx.jar
 ```
 The Application should then pop up.
+
+# Vision
+The purpose of this application is to give the participants of the course a goal to work against. It is currently an ongoing project but more experienced students can already contribute if they like. Feature-Requests as well as bugs will be created as Github-Issues which can be worked off at any time. Each week a new version will be released and the issues related with the release tagged. Thus, different versions of the application can be used to adjust exercises to the student's needs.
