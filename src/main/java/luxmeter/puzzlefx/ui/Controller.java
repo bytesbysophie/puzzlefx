@@ -1,10 +1,12 @@
 package luxmeter.puzzlefx.ui;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -14,6 +16,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
 import luxmeter.puzzlefx.model.AppConstants;
 import luxmeter.puzzlefx.model.Piece;
 
@@ -106,4 +109,25 @@ public class Controller implements Initializable {
         graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
+    //TODO: Change return type to Image and implement file validation
+    public File openFile(){
+        System.out.println("openFile()");
+        FileChooser fileChooser = new FileChooser();
+        File selectedFile = fileChooser.showOpenDialog(null);
+        return selectedFile;
+    }
+
+    public void saveFile(){
+        //TODO: Implement "save" functionality
+        System.out.println("saveFile()");
+    }
+
+    public void saveFileAs(){
+        //TODO: Implement "save as" functionality
+        System.out.println("saveFileAs()");
+    }
+
+    public void quitApplication(){
+        Platform.exit();
+    }
 }
