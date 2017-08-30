@@ -22,13 +22,14 @@ class SwapHandler implements EventHandler<MouseEvent> {
     @Override
     public void handle(MouseEvent event) {
         Piece piece = findClickedPiece(event);
-        boolean twoPiecesChosenToSwap = piece != null && previousClickedPiece != null;
+        boolean twoPiecesChosenToSwap = piece != null && previousClickedPiece != null && !controller.isNewPiecesLoaded();
         if (twoPiecesChosenToSwap) {
             swapPieces(piece);
             controller.drawShuffledPieces();
             previousClickedPiece = null;
         }
         else {
+            controller.setNewPiecesLoaded(false);
             previousClickedPiece = piece;
         }
     }

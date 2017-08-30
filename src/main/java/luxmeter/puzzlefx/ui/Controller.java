@@ -1,11 +1,13 @@
 package luxmeter.puzzlefx.ui;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ResourceBundle;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -27,6 +29,9 @@ public class Controller implements Initializable {
     private List<Piece> piecesInNormalOrder;
     private List<Piece> shuffledPieces;
 
+    // Needed to reset previousClickedPiece in SwapHandler
+    private boolean newPiecesLoaded = true;
+
     @FXML
     private StackPane rootPane;
 
@@ -41,8 +46,10 @@ public class Controller implements Initializable {
         graphicsContext = canvas.getGraphicsContext2D();
 
         fillBackgroundWithColor(Color.BLACK);
-        Image originalImage = getResizedImage();
+        InputStream imageStream = getClass().getResourceAsStream(AppConstants.IMAGE_LOCATION);
+        Image originalImage = getResizedImage(imageStream);
 
+        //TODO: Avoid redundant code (same as in method changeImage())
         piecesInNormalOrder = Piece.createPieces(originalImage,
                 AppConstants.NUM_HORIZONTAL_SLICES,
                 AppConstants.NUM_VERTICAL_SLICES);
@@ -60,6 +67,14 @@ public class Controller implements Initializable {
 
     public List<Piece> getShuffledPieces() {
         return shuffledPieces;
+    }
+
+    public boolean isNewPiecesLoaded() {
+        return newPiecesLoaded;
+    }
+
+    public void setNewPiecesLoaded(boolean newPiecesLoaded) {
+        this.newPiecesLoaded = newPiecesLoaded;
     }
 
     public void drawShuffledPieces() {
@@ -86,11 +101,11 @@ public class Controller implements Initializable {
         }
     }
 
-    private Image getResizedImage() {
+    private Image getResizedImage(InputStream stream) {
         boolean preserveRatio = true;
         boolean smooth = true;
-        return new Image(getClass().getResourceAsStream(
-                AppConstants.IMAGE_LOCATION),
+
+        return new Image(stream,
                 AppConstants.MAX_WINDOW_WIDTH,
                 AppConstants.MAX_WINDOW_HEGHT,
                 preserveRatio,
@@ -109,12 +124,34 @@ public class Controller implements Initializable {
         graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
-    //TODO: Change return type to Image and implement file validation
-    public File openFile(){
-        System.out.println("openFile()");
+    //TODO: previous Image in background is still visible, in case new image is smaller
+    private void changeImage(Image newImage){
+        if (!shuffledPieces.isEmpty()) {
+            shuffledPieces.clear();
+        }
+
+        piecesInNormalOrder = Piece.createPieces(newImage,
+                AppConstants.NUM_HORIZONTAL_SLICES,
+                AppConstants.NUM_VERTICAL_SLICES);
+        shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
+        drawShuffledPieces();
+
+        newPiecesLoaded = true;
+    }
+
+    public void openFile(){
         FileChooser fileChooser = new FileChooser();
         File selectedFile = fileChooser.showOpenDialog(null);
-        return selectedFile;
+        String selectedPath = selectedFile.getAbsolutePath();
+
+        try {
+            InputStream newImageStream = new FileInputStream(selectedPath);
+            Image newImage = getResizedImage(newImageStream);
+            changeImage(newImage);
+        } catch (IOException e) {
+            System.out.print("Image upload failed:");
+            System.out.println(e.getMessage());
+        }
     }
 
     public void saveFile(){
