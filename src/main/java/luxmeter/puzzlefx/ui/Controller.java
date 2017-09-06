@@ -29,11 +29,9 @@ public class Controller implements Initializable {
     private List<Piece> piecesInNormalOrder;
     private List<Piece> shuffledPieces;
 
-    // Needed to reset previousClickedPiece in SwapHandler
-    private boolean newPiecesLoaded = true;
-
     @FXML
     private StackPane rootPane;
+    private SwapHandler swapHandler;
 
     // first method to be called by the JavaFX framework
     // needs to set member class variables properly
@@ -56,7 +54,8 @@ public class Controller implements Initializable {
         shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
         drawShuffledPieces();
 
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, new SwapHandler(this));
+        swapHandler = new SwapHandler(this);
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
 
         addCanvasToRootPane(originalImage);
     }
@@ -69,15 +68,9 @@ public class Controller implements Initializable {
         return shuffledPieces;
     }
 
-    public boolean isNewPiecesLoaded() {
-        return newPiecesLoaded;
-    }
-
-    public void setNewPiecesLoaded(boolean newPiecesLoaded) {
-        this.newPiecesLoaded = newPiecesLoaded;
-    }
-
     public void drawShuffledPieces() {
+        fillBackgroundWithColor(Color.BLACK);
+
         if (shuffledPieces.isEmpty()) {
             return;
         }
@@ -124,7 +117,6 @@ public class Controller implements Initializable {
         graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
-    //TODO: previous Image in background is still visible, in case new image is smaller
     private void changeImage(Image newImage){
         if (!shuffledPieces.isEmpty()) {
             shuffledPieces.clear();
@@ -136,7 +128,9 @@ public class Controller implements Initializable {
         shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
         drawShuffledPieces();
 
-        newPiecesLoaded = true;
+        canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
+        swapHandler = new SwapHandler(this);
+        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
     }
 
     public void openFile(){
@@ -145,6 +139,7 @@ public class Controller implements Initializable {
         String selectedPath = selectedFile.getAbsolutePath();
 
         try {
+            //TODO: 
             InputStream newImageStream = new FileInputStream(selectedPath);
             Image newImage = getResizedImage(newImageStream);
             changeImage(newImage);
