@@ -1,10 +1,5 @@
 package luxmeter.puzzlefx.ui;
 
-import java.io.*;
-import java.net.URL;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -17,17 +12,22 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import luxmeter.puzzlefx.model.AppConstants;
+import luxmeter.puzzlefx.model.Game;
 import luxmeter.puzzlefx.model.Piece;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     private static final Logger LOG = LoggerFactory.getLogger(Controller.class);
     // Drawing Surface (Canvas)
     private GraphicsContext graphicsContext;
     private Canvas canvas;
-    private List<Piece> piecesInNormalOrder;
-    private List<Piece> shuffledPieces;
+    private Game game;
 
     @FXML
     private StackPane rootPane;
@@ -45,29 +45,31 @@ public class Controller implements Initializable {
 
         fillBackgroundWithColor(Color.BLACK);
         InputStream imageStream = getClass().getResourceAsStream(AppConstants.IMAGE_LOCATION);
-        Image originalImage = getResizedImage(imageStream);
+        game = new Game(imageStream);
+        Image originalImage = game.getResizedImage();
 
-        changeImage(originalImage);
+        changeImage();
         addCanvasToRootPane(originalImage);
     }
 
-    public List<Piece> getPiecesInNormalOrder() {
-        return piecesInNormalOrder;
-    }
-
-    public List<Piece> getShuffledPieces() {
-        return shuffledPieces;
+    public Game getGame() {
+        return game;
     }
 
     public void drawShuffledPieces() {
+        if (game == null
+                || game.getResizedImage() == null
+                || game.getResizedImage().getPixelReader() == null) {
+            return;
+        }
         fillBackgroundWithColor(Color.BLACK);
 
-        if (shuffledPieces.isEmpty()) {
+        if (game.getShuffledPieces().isEmpty()) {
             return;
         }
 
-        Image originalImage = shuffledPieces.get(0).getOriginalImage();
-        Iterator<Piece> iterator = shuffledPieces.iterator();
+        Image originalImage = game.getShuffledPieces().get(0).getOriginalImage();
+        Iterator<Piece> iterator = game.getShuffledPieces().iterator();
         for (int h = 0; h < AppConstants.NUM_HORIZONTAL_SLICES; h++) {
             int originalXPos = (int) ((originalImage.getWidth() / AppConstants.NUM_HORIZONTAL_SLICES) * h);
 
@@ -85,25 +87,8 @@ public class Controller implements Initializable {
         }
     }
 
-    private Image getResizedImage(InputStream stream) {
-        boolean preserveRatio = true;
-        boolean smooth = true;
-
-        Image image = new Image(stream,
-                AppConstants.MAX_WINDOW_WIDTH,
-                AppConstants.MAX_WINDOW_HEIGHT,
-                preserveRatio,
-                smooth);
-
-        if (image.getPixelReader() == null) {
-            LOG.error("Something is wrong with the selected image.");
-            return null;
-        }
-        return image;
-    }
-
     private void addCanvasToRootPane(Image image) {
-        if (image == null) {
+        if (image == null || image.getPixelReader() == null) {
             return;
         }
         rootPane.setPrefWidth(image.getWidth());
@@ -117,16 +102,8 @@ public class Controller implements Initializable {
         graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
-    private void changeImage(Image newImage){
-        if (newImage == null) {
-            return;
-        }
-        piecesInNormalOrder = Piece.createPieces(newImage,
-                AppConstants.NUM_HORIZONTAL_SLICES,
-                AppConstants.NUM_VERTICAL_SLICES);
-        shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
+    private void changeImage(){
         drawShuffledPieces();
-
         if (swapHandler != null) {
             canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
         }
@@ -142,29 +119,28 @@ public class Controller implements Initializable {
         File selectedFile = fileChooser.showOpenDialog(null);
 
         if(selectedFile != null) {
-            String selectedPath = selectedFile.getAbsolutePath();
-
             try {
-                InputStream newImageStream = new FileInputStream(selectedPath);
-                Image newImage = getResizedImage(newImageStream);
-                changeImage(newImage);
+                InputStream newImageStream = new FileInputStream(selectedFile.getAbsolutePath());
+                game = new Game(newImageStream);
+                changeImage();
             } catch (FileNotFoundException e) {
                 LOG.error("Image could not be loaded:", e);
             }
         }
     }
 
+    public void loadGame(){
+        //TODO: Implement "load" functionality
+    }
+
     public void saveGame(){
-        LOG.debug("saveFile()");
+        //TODO: Implement "save" functionality
     }
 
     public void saveGameAs(){
-        LOG.debug("saveFileAs()");
+        //TODO: Implement "save as" functionality
     }
 
-    public void loadGame(){
-
-    }
     public void quitApplication(){
         Platform.exit();
     }

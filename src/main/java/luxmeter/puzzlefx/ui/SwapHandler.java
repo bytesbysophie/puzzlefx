@@ -35,8 +35,8 @@ class SwapHandler implements EventHandler<MouseEvent> {
 
     private void swapPieces(Piece piece) {
         if (piece != previousClickedPiece) {
-            List<Piece> shuffledPieces = controller.getShuffledPieces();
-            List<Piece> piecesInNormalOrder = controller.getPiecesInNormalOrder();
+            List<Piece> shuffledPieces = controller.getGame().getShuffledPieces();
+            List<Piece> piecesInNormalOrder = controller.getGame().getPiecesInNormalOrder();
             int indexOfPrevPiece = piecesInNormalOrder.indexOf(previousClickedPiece);
             int indexOfPiece = piecesInNormalOrder.indexOf(piece);
             Collections.swap(shuffledPieces, indexOfPrevPiece, indexOfPiece);
@@ -44,7 +44,7 @@ class SwapHandler implements EventHandler<MouseEvent> {
     }
 
     private Piece findClickedPiece(MouseEvent event) {
-        for (Piece piece : controller.getPiecesInNormalOrder()) {
+        for (Piece piece : controller.getGame().getPiecesInNormalOrder()) {
             Rectangle2D pieceRect = new Rectangle2D(piece.getXPos(), piece.getYPos(), piece.getWidth(), piece.getHeight());
             if (pieceRect.contains(event.getSceneX(), event.getSceneY())) {
                 return piece;
