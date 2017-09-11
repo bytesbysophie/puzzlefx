@@ -10,11 +10,12 @@
    <children>
       <MenuBar>
         <menus>
-          <Menu mnemonicParsing="false" text="File">
+          <Menu mnemonicParsing="false" text="Game">
             <items>
-              <MenuItem fx:id="openFile" mnemonicParsing="false" onAction="#openFile" text="Open" />
-              <MenuItem fx:id="saveFile" mnemonicParsing="false" onAction="#saveFile" text="Save" />
-              <MenuItem fx:id="saveFileAs" mnemonicParsing="false" onAction="#saveFileAs" text="Save as..." />
+              <MenuItem fx:id="newGame" mnemonicParsing="false" onAction="#newGame" text="New Game" />
+              <MenuItem fx:id="loadGame" mnemonicParsing="false" onAction="#loadGame" text="Load Game" />
+              <MenuItem fx:id="saveGame" mnemonicParsing="false" onAction="#saveGame" text="Save Game" />
+              <MenuItem fx:id="saveGameAs" mnemonicParsing="false" onAction="#saveGameAs" text="Save Game As..." />
               <MenuItem fx:id="quitApplication" mnemonicParsing="false" onAction="#quitApplication" text="Quit" />
             </items>
           </Menu>
