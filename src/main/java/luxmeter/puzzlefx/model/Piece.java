@@ -15,7 +15,6 @@ public final class Piece {
     private int height = 0;
     private int xPos = 0;
     private int yPos = 0;
-
     private Piece(Image originalImage, int xPos, int yPos, int width, int height) {
         this.width = width;
         this.height = height;

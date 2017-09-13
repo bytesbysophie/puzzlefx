@@ -1,9 +1,6 @@
 package luxmeter.puzzlefx.ui;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
@@ -21,8 +18,11 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import luxmeter.puzzlefx.model.AppConstants;
 import luxmeter.puzzlefx.model.Piece;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Controller implements Initializable {
+    private static final Logger LOG = LoggerFactory.getLogger(Controller.class);
     // Drawing Surface (Canvas)
     private GraphicsContext graphicsContext;
     private Canvas canvas;
@@ -39,7 +39,7 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // need to define an initial size for the canvas otherwise we won't see anything
-        canvas = new Canvas(AppConstants.MAX_WINDOW_WIDTH, AppConstants.MAX_WINDOW_HEGHT);
+        canvas = new Canvas(AppConstants.MAX_WINDOW_WIDTH, AppConstants.MAX_WINDOW_HEIGHT);
 
         graphicsContext = canvas.getGraphicsContext2D();
 
@@ -47,16 +47,7 @@ public class Controller implements Initializable {
         InputStream imageStream = getClass().getResourceAsStream(AppConstants.IMAGE_LOCATION);
         Image originalImage = getResizedImage(imageStream);
 
-        //TODO: Avoid redundant code (same as in method changeImage())
-        piecesInNormalOrder = Piece.createPieces(originalImage,
-                AppConstants.NUM_HORIZONTAL_SLICES,
-                AppConstants.NUM_VERTICAL_SLICES);
-        shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
-        drawShuffledPieces();
-
-        swapHandler = new SwapHandler(this);
-        canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
-
+        changeImage(originalImage);
         addCanvasToRootPane(originalImage);
     }
 
@@ -98,14 +89,23 @@ public class Controller implements Initializable {
         boolean preserveRatio = true;
         boolean smooth = true;
 
-        return new Image(stream,
+        Image image = new Image(stream,
                 AppConstants.MAX_WINDOW_WIDTH,
-                AppConstants.MAX_WINDOW_HEGHT,
+                AppConstants.MAX_WINDOW_HEIGHT,
                 preserveRatio,
                 smooth);
+
+        if (image.getPixelReader() == null) {
+            LOG.error("Something is wrong with the selected image.");
+            return null;
+        }
+        return image;
     }
 
     private void addCanvasToRootPane(Image image) {
+        if (image == null) {
+            return;
+        }
         rootPane.setPrefWidth(image.getWidth());
         rootPane.setPrefHeight(image.getHeight());
         rootPane.getChildren().add(canvas);
@@ -118,47 +118,53 @@ public class Controller implements Initializable {
     }
 
     private void changeImage(Image newImage){
-        if (!shuffledPieces.isEmpty()) {
-            shuffledPieces.clear();
+        if (newImage == null) {
+            return;
         }
-
         piecesInNormalOrder = Piece.createPieces(newImage,
                 AppConstants.NUM_HORIZONTAL_SLICES,
                 AppConstants.NUM_VERTICAL_SLICES);
         shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
         drawShuffledPieces();
 
-        canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
+        if (swapHandler != null) {
+            canvas.removeEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
+        }
         swapHandler = new SwapHandler(this);
         canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
     }
 
-    public void openFile(){
+    public void newGame(){
         FileChooser fileChooser = new FileChooser();
-        File selectedFile = fileChooser.showOpenDialog(null);
-        String selectedPath = selectedFile.getAbsolutePath();
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Image Files",AppConstants.SUPPORTED_IMAGE_EXTENSION);
+        fileChooser.getExtensionFilters().add(extensionFilter);
 
-        try {
-            //TODO: 
-            InputStream newImageStream = new FileInputStream(selectedPath);
-            Image newImage = getResizedImage(newImageStream);
-            changeImage(newImage);
-        } catch (IOException e) {
-            System.out.print("Image upload failed:");
-            System.out.println(e.getMessage());
+        File selectedFile = fileChooser.showOpenDialog(null);
+
+        if(selectedFile != null) {
+            String selectedPath = selectedFile.getAbsolutePath();
+
+            try {
+                InputStream newImageStream = new FileInputStream(selectedPath);
+                Image newImage = getResizedImage(newImageStream);
+                changeImage(newImage);
+            } catch (FileNotFoundException e) {
+                LOG.error("Image could not be loaded:", e);
+            }
         }
     }
 
-    public void saveFile(){
-        //TODO: Implement "save" functionality
-        System.out.println("saveFile()");
+    public void saveGame(){
+        LOG.debug("saveFile()");
     }
 
-    public void saveFileAs(){
-        //TODO: Implement "save as" functionality
-        System.out.println("saveFileAs()");
+    public void saveGameAs(){
+        LOG.debug("saveFileAs()");
     }
 
+    public void loadGame(){
+
+    }
     public void quitApplication(){
         Platform.exit();
     }
