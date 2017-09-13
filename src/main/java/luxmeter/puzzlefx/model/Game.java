@@ -16,7 +16,7 @@ public class Game implements Serializable {
     private List<Piece> piecesInNormalOrder;
     private List<Piece> shuffledPieces;
 
-    /*Es muss ein Input Stream übergeben werden, dieser muss zwei mal ausgelesen werden, einmal als byte[] speichern*/
+    //TODO: byte[] übergeben statt Stream
     public Game(InputStream imageFilePath) {
         boolean preserveRatio = true;
         boolean smooth = true;
@@ -32,7 +32,6 @@ public class Game implements Serializable {
                 AppConstants.NUM_VERTICAL_SLICES);
         this.shuffledPieces = Piece.shufflePieces(piecesInNormalOrder);
 
-        //TODO: Image zum Seriaisieren in byte[] image einlesen
     }
 
     public Image getResizedImage() {
