@@ -45,7 +45,7 @@ public class Controller implements Initializable {
 
         fillBackgroundWithColor(Color.BLACK);
         InputStream imageStream = getClass().getResourceAsStream(AppConstants.IMAGE_LOCATION);
-        game = new Game(imageStream);
+        game = new Game(inputStreamToByteArray(imageStream));
         Image originalImage = game.getResizedImage();
 
         changeImage();
@@ -111,37 +111,85 @@ public class Controller implements Initializable {
         canvas.addEventHandler(MouseEvent.MOUSE_CLICKED, swapHandler);
     }
 
-    public void newGame(){
+    // Create new Game with selected File and call changeImage() to update GUI with the new Game
+    public void newGame() {
         FileChooser fileChooser = new FileChooser();
-        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Image Files",AppConstants.SUPPORTED_IMAGE_EXTENSION);
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Image Files", AppConstants.SUPPORTED_IMAGE_EXTENSION);
         fileChooser.getExtensionFilters().add(extensionFilter);
-
         File selectedFile = fileChooser.showOpenDialog(null);
 
-        if(selectedFile != null) {
+        if (selectedFile != null) {
             try {
-                InputStream newImageStream = new FileInputStream(selectedFile.getAbsolutePath());
-                game = new Game(newImageStream);
+                InputStream input = new FileInputStream(selectedFile.getAbsolutePath());
+                game = new Game(inputStreamToByteArray(input));
                 changeImage();
             } catch (FileNotFoundException e) {
-                LOG.error("Image could not be loaded:", e);
+                LOG.error("Image could not be loaded: ", e);
             }
         }
     }
 
-    public void loadGame(){
-        //TODO: Implement "load" functionality
+    public void loadGame() {
+        FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Game Files", "*.game");
+        fileChooser.getExtensionFilters().add(extensionFilter);
+        File selectedFile = fileChooser.showOpenDialog(null);
+
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream((new FileInputStream(selectedFile)));
+            game = (Game) objectInputStream.readObject();
+        } catch (FileNotFoundException e) {
+            LOG.error("Game could not be loaded: ", e);
+        } catch (IOException ioe) {
+            LOG.error("Game could not be loaded: ", ioe);
+        } catch (ClassNotFoundException cnfe) {
+            LOG.error("Game could not be loaded: ", cnfe);
+        }
+
+        changeImage();
     }
 
-    public void saveGame(){
-        //TODO: Implement "save" functionality
+    public void saveGame() {
     }
 
-    public void saveGameAs(){
-        //TODO: Implement "save as" functionality
+    //TODO: Set Path correctly
+    public void saveGameAs() {
+        javafx.stage.FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Speicherort wählen");
+        File selectedFile = fileChooser.showSaveDialog(null);
+        String selectedPath = selectedFile.getAbsolutePath();
+        selectedPath += ".game";
+
+        try {
+            FileOutputStream outputStream;
+            outputStream = new FileOutputStream(selectedPath);
+            ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+            oos.writeObject(this.game);
+        } catch (FileNotFoundException e) {
+            LOG.error("Game could not be saved: ", e);
+        } catch (IOException e) {
+            LOG.error("Game could not be saved: ", e);
+        }
     }
 
-    public void quitApplication(){
+    public void quitApplication() {
         Platform.exit();
+    }
+
+    // Helper Method to transform an InputStream to a Byte Array
+    public static byte[] inputStreamToByteArray(InputStream inputStream) {
+        try {
+            //TODO: Array-Größe korrekt bestimmen
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                output.write(buffer, 0, bytesRead);
+            }
+            return output.toByteArray();
+        } catch (IOException e) {
+            LOG.error("A error occurred while processing the InputStream:", e);
+            return null;
+        }
     }
 }
