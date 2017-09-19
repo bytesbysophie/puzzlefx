@@ -45,7 +45,7 @@ public class Controller implements Initializable {
 
         fillBackgroundWithColor(Color.BLACK);
         InputStream imageStream = getClass().getResourceAsStream(AppConstants.IMAGE_LOCATION);
-        game = new Game(inputStreamToByteArray(imageStream));
+        game = Game.createGameFromInputStream(imageStream);
         Image originalImage = game.getResizedImage();
 
         changeImage();
@@ -121,7 +121,7 @@ public class Controller implements Initializable {
         if (selectedFile != null) {
             try {
                 InputStream input = new FileInputStream(selectedFile.getAbsolutePath());
-                game = new Game(inputStreamToByteArray(input));
+                game = Game.createGameFromInputStream(input);
                 changeImage();
             } catch (FileNotFoundException e) {
                 LOG.error("Image could not be loaded: ", e);
@@ -129,67 +129,73 @@ public class Controller implements Initializable {
         }
     }
 
+    // Load Game from local hard drive. Only files with defined Game extension accepted.
     public void loadGame() {
         FileChooser fileChooser = new FileChooser();
-        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Game Files", "*.game");
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Game Files", ("*" + AppConstants.GAME_EXTENSION));
         fileChooser.getExtensionFilters().add(extensionFilter);
+        fileChooser.setTitle("Load Game");
         File selectedFile = fileChooser.showOpenDialog(null);
 
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream((new FileInputStream(selectedFile)));
-            game = (Game) objectInputStream.readObject();
-        } catch (FileNotFoundException e) {
-            LOG.error("Game could not be loaded: ", e);
-        } catch (IOException ioe) {
-            LOG.error("Game could not be loaded: ", ioe);
-        } catch (ClassNotFoundException cnfe) {
-            LOG.error("Game could not be loaded: ", cnfe);
+        if(selectedFile != null){
+            try {
+                FileInputStream fileInputStream = new FileInputStream(selectedFile);
+                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
+                game = (Game) objectInputStream.readObject();
+                game.initializeLoadedGame(selectedFile.getAbsolutePath());
+            } catch (FileNotFoundException e) {
+                LOG.error("Game could not be loaded: ", e);
+            } catch (IOException ioe) {
+                LOG.error("Game could not be loaded: ", ioe);
+            } catch (ClassNotFoundException cnfe) {
+                LOG.error("Game could not be loaded: ", cnfe);
+            }
+
+            changeImage();
         }
-
-        changeImage();
     }
 
+    // Save Game to known path. Open saveGameAs() if savePath of the Game is not set yet.
     public void saveGame() {
+        if(game.getSavePath() == null){
+            saveGameAs();
+        } else {
+            try {
+                FileOutputStream outputStream = new FileOutputStream(game.getSavePath());
+                ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+                oos.writeObject(this.game);
+            } catch (IOException e) {
+                LOG.error("Game could not be saved: " + e);
+            }
+        }
     }
 
-    //TODO: Set Path correctly
+    // Save Game to path selected by the user using the defined Game extension.
     public void saveGameAs() {
-        javafx.stage.FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Speicherort wählen");
+        String errorMessage = "Game could not be saved: ";
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Game As...");
+        fileChooser.setInitialFileName("new" + AppConstants.GAME_EXTENSION);
         File selectedFile = fileChooser.showSaveDialog(null);
-        String selectedPath = selectedFile.getAbsolutePath();
-        selectedPath += ".game";
 
-        try {
-            FileOutputStream outputStream;
-            outputStream = new FileOutputStream(selectedPath);
-            ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-            oos.writeObject(this.game);
-        } catch (FileNotFoundException e) {
-            LOG.error("Game could not be saved: ", e);
-        } catch (IOException e) {
-            LOG.error("Game could not be saved: ", e);
+        if(selectedFile != null) {
+            try {
+                String selectedPath = selectedFile.getAbsolutePath();
+                if (selectedPath.substring(selectedPath.length() - 5) != ".game"){
+                    selectedPath += ".game";
+                }
+                FileOutputStream outputStream = new FileOutputStream(selectedPath);
+                ObjectOutputStream oos = new ObjectOutputStream(outputStream);
+                oos.writeObject(this.game);
+            } catch (FileNotFoundException e) {
+                LOG.error(errorMessage, e);
+            } catch (IOException ioe) {
+                LOG.error(errorMessage, ioe);
+            }
         }
     }
 
     public void quitApplication() {
         Platform.exit();
-    }
-
-    // Helper Method to transform an InputStream to a Byte Array
-    public static byte[] inputStreamToByteArray(InputStream inputStream) {
-        try {
-            //TODO: Array-Größe korrekt bestimmen
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                output.write(buffer, 0, bytesRead);
-            }
-            return output.toByteArray();
-        } catch (IOException e) {
-            LOG.error("A error occurred while processing the InputStream:", e);
-            return null;
-        }
     }
 }
