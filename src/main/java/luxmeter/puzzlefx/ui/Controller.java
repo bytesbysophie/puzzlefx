@@ -175,15 +175,14 @@ public class Controller implements Initializable {
         String errorMessage = "Game could not be saved: ";
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save Game As...");
-        fileChooser.setInitialFileName("new" + AppConstants.GAME_EXTENSION);
+        fileChooser.setInitialFileName("new");
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("Game Files", ("*" + AppConstants.GAME_EXTENSION));
+        fileChooser.getExtensionFilters().add(extensionFilter);
         File selectedFile = fileChooser.showSaveDialog(null);
 
         if(selectedFile != null) {
             try {
                 String selectedPath = selectedFile.getAbsolutePath();
-                if (selectedPath.substring(selectedPath.length() - 5) != ".game"){
-                    selectedPath += ".game";
-                }
                 FileOutputStream outputStream = new FileOutputStream(selectedPath);
                 ObjectOutputStream oos = new ObjectOutputStream(outputStream);
                 oos.writeObject(this.game);

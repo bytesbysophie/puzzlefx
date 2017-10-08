@@ -83,7 +83,6 @@ public class Game implements Serializable {
         byte[] imageByteArray = null;
 
         try {
-            //TODO: Wie lässt sich Array-Größe korrekt bestimmen? (Image.getWidth * Image.getHeight * 4)
             byte[] buffer = new byte[8192];
             int bytesRead;
             ByteArrayOutputStream output = new ByteArrayOutputStream();
